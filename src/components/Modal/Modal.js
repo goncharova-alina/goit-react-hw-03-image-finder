@@ -1,35 +1,56 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { createPortal } from "react-dom";
+import Loader from "react-loader-spinner";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import "./Modal.css";
 
 const modalRoot = document.querySelector("#modal-root");
+
 export default class Modal extends Component {
+  state = {
+    loading: false,
+  };
+  toggleLoadind() {
+    this.setState((prevState) => {
+      return { loading: !prevState.loading };
+    });
+  }
   componentDidMount() {
-    window.addEventListener("keydown", this.handleKeyDown);
+    this.setState({ loading: true });
+    window.addEventListener("keydown", this.handleOnClose);
   }
 
   componentWillUnmount() {
-    window.removeEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keydown", this.handleOnClose);
   }
 
-  handleKeyDown = (e) => {
-    if (e.code === "Escape") {
-      this.props.onClose();
+  handleOnClose = (e) => {
+    if (e.code !== "Escape") {
+      return;
     }
-  };
 
+    this.props.onClose();
+  };
   handleBackdropClick = (event) => {
     if (event.currentTarget === event.target) {
       this.props.onClose();
     }
   };
+
+  handleImageLoaded = () => {
+    this.setState({ loading: false });
+  };
+
   render() {
     const { src, alt } = this.props;
     return createPortal(
-      <div className="overlay" onClick={this.handleBackdropClick}>
-        <div className="modal">
-          <img className="modalImg" src={src} alt={alt} />
+      <div onClick={this.handleBackdropClick} className="overlay">
+        <div className="modal" onLoad={this.handleImageLoaded}>
+          <img className="modalImg" src={src} alt={alt}></img>
         </div>
+        {this.state.loading && (
+          <Loader type="BallTriangle" color="#3f51b5" height={350} />
+        )}
       </div>,
       modalRoot
     );
